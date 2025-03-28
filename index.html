@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map Information</title>
+    <!-- Leaflet CSS for Map Styling -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #map { height: 500px; width: 80%; margin: auto; border-radius: 10px; }
+        #info { margin-top: 10px; font-size: 18px; padding: 10px; border: 1px solid #ddd; display: inline-block; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h2>🌍 Click on the Map to Get Place Details</h2>
+    <div id="map"></div>
+    <div id="info">Click on the map to see details...</div>
+    
+    <!-- Leaflet.js for Map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map
+        const map = L.map('map').setView([20, 78], 4); // Default view set to India
+
+        // Adding Tile Layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Function to fetch data when map is clicked
+        map.on('click', async function (e) {
+            const lat = e.latlng.lat;  // Get Latitude
+            const lon = e.latlng.lng;  // Get Longitude
+
+            const weatherApiKey = '28c70c46ff43b0fbeb85383c5b257753'; // Add your OpenWeather API Key here
+            
+            // Fetch Weather Data from OpenWeatherMap API
+            let weatherData = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`);
+            let weather = await weatherData.json();
+
+            // Fetch Place Details using Reverse Geocoding (OpenStreetMap)
+            let placeData = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            let place = await placeData.json();
+
+            // Extract useful details
+            let locationName = place.display_name || "Unknown Location"; 
+            let temperature = weather.main.temp + "°C";
+            let nature = weather.weather[0].description; // e.g., "Clear Sky", "Rainy"
+            let crowdLevel = Math.floor(Math.random() * 100) + "%"; // Simulated Data
+            let travelRating = (Math.random() * 5).toFixed(1) + " ⭐"; // Simulated Rating
+
+            // Display the details in the info div
+            document.getElementById("info").innerHTML = `
+                <strong>📍 Location:</strong> ${locationName} <br>
+                <strong>🌡 Temperature:</strong> ${temperature} <br>
+                <strong>🌿 Nature:</strong> ${nature} <br>
+                <strong>👥 Crowd Level:</strong> ${crowdLevel} <br>
+                <strong>✈ Travel Rating:</strong> ${travelRating}
+            `;
+
+            // Add a marker on the map
+            L.marker([lat, lon]).addTo(map)
+                .bindPopup(`<b>${locationName}</b><br>🌡 Temp: ${temperature}<br>✈ Travel: ${travelRating}`)
+                .openPopup();
+        });
+    </script>
+</body>
+</html>
